@@ -311,10 +311,10 @@ class gsuite_service(object):
     def __init__(self, service):
         self.service = service
     
-    def addData_to_gsheet(self, sheet_id, sheet_range):
+    def addData_to_gsheet(self, sheet_id, sheet_range, array):
         body = {
             "majorDimension": "ROWS",
-            "values": [['date', 'company', 'cost'], ['2020/09/14', 'TRAHA', '1667730'], ['2020/09/14', 'Yahoo Shoping', '13413349'], ['2020/09/14', 'Taiwan retail', '327966']]
+            "values": array
         }
         result = self.service.spreadsheets().values().update(
                 spreadsheetId=sheet_id, range=sheet_range,
@@ -325,19 +325,25 @@ class gsuite_service(object):
     def check_gsheet_exist(self, sheet_id, sheet_range):
         self.service.spreadsheets().get(spreadsheetId=sheet_id, ranges=sheet_range).execute()
     
+    def clear_gsheet(self, sheet_id, sheet_range):
+        self.service.spreadsheets().values().clear(spreadsheetId=sheet_id, range=sheet_range, body={}).execute()
+
 if __name__ == "__main__":
-    #clean_folder(raw_folder)
+    clean_folder(raw_folder)
     clean_folder(output_folder)
-    #download_fb(read_settei())
+    download_fb(read_settei())
     data_prcess()
     service = gsuite_service(call_gsuite())
-    #service.addData_to_gsheet('1kNuR2zsJ0U1jSvsj4XuJBVzJEEKwuxVRuQDg39aFtss', 'Data!A1:C')
     output_file = output_folder + '\\out_put.csv'
+    
     with open(output_file, newline='', encoding='utf-8') as file:
         read_file = csv.reader(file)
         _data = []
         for row in read_file:
             _data.append(row)
         print(_data)
-    
-    service.addData_to_gsheet('1kNuR2zsJ0U1jSvsj4XuJBVzJEEKwuxVRuQDg39aFtss', 'Data!A1:E')
+
+    for i in read_settei():
+        _spreadsheetID = i[8]
+        service.clear_gsheet(_spreadsheetID, 'Data!A1:E')
+        service.addData_to_gsheet(_spreadsheetID, 'Data!A1:E', _data)
